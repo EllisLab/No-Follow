@@ -4,11 +4,11 @@ Looks for hyperlinks in the text and adds rel="nofollow" attribute to them
 
     {exp:no_follow}
 
-        A &lt;a href="http://www.evilsite.com">link&lt;/a> from Spammers
+        A <a href="http://www.evilsite.com">link</a> from Spammers
 
     {/exp:no_follow}
 
-Returns `A &lt;a href="http://www.evilsite.com" rel="nofollow">link&lt;/a>` from Spammers;
+Returns `A <a href="http://www.evilsite.com" rel="nofollow">link</a>` from Spammers;
 
 ## PARAMETERS
 
