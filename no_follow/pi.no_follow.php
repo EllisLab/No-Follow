@@ -1,7 +1,7 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
 /*
-Copyright (C) 2005 - 2011 EllisLab, Inc.
+Copyright (C) 2005 - 2015 EllisLab, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,51 +25,40 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from EllisLab, Inc.
 */
 
-$plugin_info = array(
-						'pi_name'			=> 'No Follow',
-						'pi_version'		=> '1.1',
-						'pi_author'			=> 'Paul Burdick',
-						'pi_author_url'		=> 'http://www.expressionengine.com/',
-						'pi_description'	=> 'Gives links the rel="nofollow" attribute',
-						'pi_usage'			=> No_follow::usage()
-					);
-
 /**
  * No Follow Class
  *
  * @package			ExpressionEngine
  * @category		Plugin
- * @author			ExpressionEngine Dev Team
- * @copyright		Copyright (c) 2005 - 2011, EllisLab, Inc.
- * @link			http://expressionengine.com/downloads/details/no_follow/
+ * @author			EllisLab
+ * @copyright		Copyright (c) 2004 - 2015, EllisLab, Inc.
+ * @link			https://github.com/EllisLab/No-Follow
  */
 class No_follow {
 
-	var $return_data;
-	
+	public $return_data;
+
 	/**
 	 * Constructor
 	 *
 	 * @access	public
 	 * @return	void
 	 */
-	function No_follow($str = '')
+	function __construct($str = '')
 	{
-        $EE =& get_instance();
-
 		// -------------------------------
 		//  Fetch Parameters
 		// -------------------------------
 
-		$group		= ( ! $EE->TMPL->fetch_param('group')) ? '1' : $EE->TMPL->fetch_param('group');
-		$time		= ( ! $EE->TMPL->fetch_param('time')) ? '1' : $EE->TMPL->fetch_param('time'); // In days
-		$whitelist	= ( ! $EE->TMPL->fetch_param('whitelist')) ? 'y' : $EE->TMPL->fetch_param('whitelist');
+		$group		= ( ! ee()->TMPL->fetch_param('group')) ? '1' : ee()->TMPL->fetch_param('group');
+		$time		= ( ! ee()->TMPL->fetch_param('time')) ? '1' : ee()->TMPL->fetch_param('time'); // In days
+		$whitelist	= ( ! ee()->TMPL->fetch_param('whitelist')) ? 'y' : ee()->TMPL->fetch_param('whitelist');
 
 		// -------------------------------
 		//  Fetch and Check Our Content
 		// -------------------------------
 
-		$template = ($str == '') ? $EE->TMPL->tagdata : $str;
+		$template = ($str == '') ? ee()->TMPL->tagdata : $str;
 
 		// Opening Link Tag?
 		if (stristr(str_replace('&lt;', '<', $template), '<a') === false)
@@ -84,9 +73,9 @@ class No_follow {
 
 		$ignore = array();
 
-		if (is_array($EE->blacklist->whitelisted))
+		if (is_array(ee()->blacklist->whitelisted))
 		{
-			$ignore		= $EE->blacklist->whitelisted;
+			$ignore		= ee()->blacklist->whitelisted;
 			$group		= 'none';
 			$whitelist	= 'n';
 		}
@@ -99,15 +88,15 @@ class No_follow {
 		{
 			$group = 'abc|def';
 			$replace = array('http://','https://', 'www');
-			
-			$EE->db->select('url');
-			$EE->db->where_not_in('group_id', array(2, 3, 4));
-			$EE->db->where('url !=', '');
-			$EE->db->where('join_date < ', $EE->localize->now - (24*60*60*$time));
-			$EE->functions->ar_andor_string($group, 'members.group_id');
-			
-			$query = $EE->db->get('members');
-        			
+
+			ee()->db->select('url');
+			ee()->db->where_not_in('group_id', array(2, 3, 4));
+			ee()->db->where('url !=', '');
+			ee()->db->where('join_date < ', ee()->localize->now - (24*60*60*$time));
+			ee()->functions->ar_andor_string($group, 'members.group_id');
+
+			$query = ee()->db->get('members');
+
 			if ($query->num_rows() > 0)
 			{
 				foreach($query->result_array() as $row)
@@ -121,24 +110,24 @@ class No_follow {
 		//  Retrieve Whitelist URLs
 		// -------------------------------
 
-		if ($whitelist == 'y' && $EE->db->table_exists('whitelisted'))
+		if ($whitelist == 'y' && ee()->db->table_exists('whitelisted'))
 		{
-			$EE->db->select('whitelisted_value');
-			$EE->db->where('whitelisted_type', 'url');
-			$EE->db->where('whitelisted_value !=', '');
-			$query = $EE->db->get('whitelisted');
+			ee()->db->select('whitelisted_value');
+			ee()->db->where('whitelisted_type', 'url');
+			ee()->db->where('whitelisted_value !=', '');
+			$query = ee()->db->get('whitelisted');
 
 			if ($query->num_rows() > 0)
 			{
 				$ignore = array_merge($ignore, explode('|', $query->row('whitelisted_value')));
 			}
 		}
-		
+
 		// -------------------------------
 		//  Cache Ignored URLs
 		// -------------------------------
 
-		$EE->blacklist->whitelisted = $ignore;
+		ee()->blacklist->whitelisted = $ignore;
 
 		// -------------------------------
 		//  Search and Modify URLs
@@ -149,7 +138,7 @@ class No_follow {
 			for($i=0; $i < count($matches['0']); $i++)
 			{
 				$doit = 'y';
-				
+
 				if (count($ignore) > 0)
 				{
 					foreach($ignore as $good)
@@ -161,7 +150,7 @@ class No_follow {
 						}
 					}
 				}
-				
+
 				if ($doit == 'y')
 				{
 					$template = str_replace($matches['0'][$i], $matches['0'][$i].' rel="nofollow"', $template);
@@ -175,58 +164,4 @@ class No_follow {
 
 		$this->return_data = $template;
 	}
-	
-	// --------------------------------------------------------------------
-	
-	/**
-	 * Plugin Usage
-	 *
-	 * @access	public
-	 * @return	string	plugin usage text
-	 */
-	function usage()
-	{
-		ob_start(); 
-		?>
-
-		Looks for hyperlinks in the text and adds rel="nofollow" attribute to them
-
-		{exp:no_follow}
-
-		A &lt;a href="http://www.evilsite.com">link&lt;/a> from Spammers
-
-		{/exp:no_follow}
-
-		// Returns 'A &lt;a href="http://www.evilsite.com" rel="nofollow">link&lt;/a> from Spammers;
-
-		PARAMETERS
-		----------------------------------------------
-		group - Allows you to specify member groups whose members' URLs will be ignored by this plugin.
-
-		time - Allows you to specify how much time (in days) a member account must be active before its member url will be ignored.
-		This allows newly created member accounts to be reviewed for a short period before their urls are ignored. Only works if the group
-		parameter is set.
-
-		whitelist - (y/n) Allows you to use the ExpressionEngine Whitelist to ignore URLs that are whitelisted.
-
-
-		Version 1.1
-		******************
-		- Updated plugin to be 2.0 compatible
-
-
-		<?php
-		$buffer = ob_get_contents();
-	
-		ob_end_clean(); 
-
-		return $buffer;
-	}
-
-	// --------------------------------------------------------------------
-
 }
-// END CLASS
-
-/* End of file pi.no_follow.php */
-/* Location: ./system/expressionengine/no_follow/pi.no_follow.php */
