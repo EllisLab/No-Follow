@@ -1,7 +1,7 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
 /*
-Copyright (C) 2005 - 2015 EllisLab, Inc.
+Copyright (C) 2005 - 2021 Packet Tide, LLC
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -31,7 +31,7 @@ in this Software without prior written authorization from EllisLab, Inc.
  * @package			ExpressionEngine
  * @category		Plugin
  * @author			EllisLab
- * @copyright		Copyright (c) 2004 - 2015, EllisLab, Inc.
+ * @copyright		Copyright (c) 2005 - 2021 Packet Tide, LL
  * @link			https://github.com/EllisLab/No-Follow
  */
 class No_follow {
@@ -78,32 +78,6 @@ class No_follow {
 			$ignore		= ee()->blacklist->whitelisted;
 			$group		= 'none';
 			$whitelist	= 'n';
-		}
-
-		// -------------------------------
-		//  Ignore Member URLs
-		// -------------------------------
-
-		if ($group != 'none')
-		{
-			$group = 'abc|def';
-			$replace = array('http://','https://', 'www');
-
-			ee()->db->select('url');
-			ee()->db->where_not_in('group_id', array(2, 3, 4));
-			ee()->db->where('url !=', '');
-			ee()->db->where('join_date < ', ee()->localize->now - (24*60*60*$time));
-			ee()->functions->ar_andor_string($group, 'members.group_id');
-
-			$query = ee()->db->get('members');
-
-			if ($query->num_rows() > 0)
-			{
-				foreach($query->result_array() as $row)
-				{
-					$ignore[] = str_replace($replace, '', $row['url']);
-				}
-			}
 		}
 
 		// -------------------------------
