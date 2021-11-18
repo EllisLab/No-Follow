@@ -1,7 +1,7 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
 /*
-Copyright (C) 2005 - 2015 EllisLab, Inc.
+Copyright (C) 2005 - 2021 Packet Tide, LLC
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -16,13 +16,13 @@ all copies or substantial portions of the Software.
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-ELLISLAB, INC. BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+PACKET TIDE, LLC BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-Except as contained in this notice, the name of EllisLab, Inc. shall not be
+Except as contained in this notice, the name of Packet Tide, LLC shall not be
 used in advertising or otherwise to promote the sale, use or other dealings
-in this Software without prior written authorization from EllisLab, Inc.
+in this Software without prior written authorization from Packet Tide, LLC.
 */
 
 /**
@@ -30,8 +30,8 @@ in this Software without prior written authorization from EllisLab, Inc.
  *
  * @package			ExpressionEngine
  * @category		Plugin
- * @author			EllisLab
- * @copyright		Copyright (c) 2004 - 2015, EllisLab, Inc.
+ * @author			Packet Tide
+ * @copyright		Copyright (c) 2005 - 2021 Packet Tide, LL
  * @link			https://github.com/EllisLab/No-Follow
  */
 class No_follow {
@@ -52,7 +52,7 @@ class No_follow {
 
 		$group		= ( ! ee()->TMPL->fetch_param('group')) ? '1' : ee()->TMPL->fetch_param('group');
 		$time		= ( ! ee()->TMPL->fetch_param('time')) ? '1' : ee()->TMPL->fetch_param('time'); // In days
-		$whitelist	= ( ! ee()->TMPL->fetch_param('whitelist')) ? 'y' : ee()->TMPL->fetch_param('whitelist');
+		$allowedlist	= ( ! ee()->TMPL->fetch_param('allowedlist')) ? 'y' : ee()->TMPL->fetch_param('allowedlist');
 
 		// -------------------------------
 		//  Fetch and Check Our Content
@@ -73,53 +73,27 @@ class No_follow {
 
 		$ignore = array();
 
-		if (is_array(ee()->blacklist->whitelisted))
+		if (is_array(ee()->blockedlist->allowed))
 		{
-			$ignore		= ee()->blacklist->whitelisted;
+			$ignore		= ee()->blockedlist->allowed;
 			$group		= 'none';
-			$whitelist	= 'n';
+			$allowedlist	= 'n';
 		}
 
 		// -------------------------------
-		//  Ignore Member URLs
+		//  Retrieve allowedlist URLs
 		// -------------------------------
 
-		if ($group != 'none')
+		if ($allowedlist == 'y' && ee()->db->table_exists('allowedlist'))
 		{
-			$group = 'abc|def';
-			$replace = array('http://','https://', 'www');
-
-			ee()->db->select('url');
-			ee()->db->where_not_in('group_id', array(2, 3, 4));
-			ee()->db->where('url !=', '');
-			ee()->db->where('join_date < ', ee()->localize->now - (24*60*60*$time));
-			ee()->functions->ar_andor_string($group, 'members.group_id');
-
-			$query = ee()->db->get('members');
+			ee()->db->select('allowedlist_value');
+			ee()->db->where('allowedlist_type', 'url');
+			ee()->db->where('allowedlist_value !=', '');
+			$query = ee()->db->get('allowedlist');
 
 			if ($query->num_rows() > 0)
 			{
-				foreach($query->result_array() as $row)
-				{
-					$ignore[] = str_replace($replace, '', $row['url']);
-				}
-			}
-		}
-
-		// -------------------------------
-		//  Retrieve Whitelist URLs
-		// -------------------------------
-
-		if ($whitelist == 'y' && ee()->db->table_exists('whitelisted'))
-		{
-			ee()->db->select('whitelisted_value');
-			ee()->db->where('whitelisted_type', 'url');
-			ee()->db->where('whitelisted_value !=', '');
-			$query = ee()->db->get('whitelisted');
-
-			if ($query->num_rows() > 0)
-			{
-				$ignore = array_merge($ignore, explode('|', $query->row('whitelisted_value')));
+				$ignore = array_merge($ignore, explode('|', $query->row('allowedlist_value')));
 			}
 		}
 
@@ -127,7 +101,7 @@ class No_follow {
 		//  Cache Ignored URLs
 		// -------------------------------
 
-		ee()->blacklist->whitelisted = $ignore;
+		ee()->blockedlist->allowed = $ignore;
 
 		// -------------------------------
 		//  Search and Modify URLs
