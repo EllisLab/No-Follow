@@ -24,9 +24,14 @@ Returns `A <a href="http://www.evilsite.com" rel="nofollow">link</a>`.
 - `time` - Allows you to specify how much time (in days) a member account must be active before its member url will be ignored.
 This allows newly created member accounts to be reviewed for a short period before their urls are ignored. Only works if the group
 parameter is set.
-- `whitelist` - (y/n) Allows you to use the ExpressionEngine Whitelist to ignore URLs that are whitelisted.
+- `allowlist` - (y/n) Allows you to use the ExpressionEngine Allow List to ignore URLs that are listed in the allow list.
 
 ## Change Log
+
+### 3.0
+
+- Updated plugin to be 6.0 compatible
+- Removed deprecated blacklist/whitelist in favor of blockedlist/allowlist
 
 ### 2.0
 
