@@ -31,7 +31,8 @@ parameter is set.
 ### 3.0
 
 - Updated plugin to be 6.0 compatible
-- Removed deprecated blacklist/whitelist in favor of blockedlist/allowlist
+- Removed deprecated blacklist/whitelist in favor of blockedlist/allowlist for EE6 and newer
+- `whitelist` parameter is now `allowlist`
 
 ### 2.0
 
