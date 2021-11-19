@@ -73,9 +73,20 @@ class No_follow {
 
 		$ignore = array();
 
-		if (is_array(ee()->blockedlist->allowed))
+		if (version_compare(ee()->config->item('app_version'), '6.0', '<'))
 		{
-			$ignore		= ee()->blockedlist->allowed;
+			$allowed = ee()->blacklist->whitelisted;
+			$allowedtablename = "whitelisted";
+		}
+		else
+		{
+			$allowed = ee()->blockedlist->allowed;
+			$allowedtablename = "allowedlist";
+		}
+
+		if (is_array($allowed))
+		{
+			$ignore		= $allowed;
 			$group		= 'none';
 			$allowedlist	= 'n';
 		}
@@ -84,16 +95,16 @@ class No_follow {
 		//  Retrieve allowedlist URLs
 		// -------------------------------
 
-		if ($allowedlist == 'y' && ee()->db->table_exists('allowedlist'))
+		if ($allowedlist == 'y' && ee()->db->table_exists($allowedtablename))
 		{
-			ee()->db->select('allowedlist_value');
-			ee()->db->where('allowedlist_type', 'url');
-			ee()->db->where('allowedlist_value !=', '');
-			$query = ee()->db->get('allowedlist');
+			ee()->db->select("{$allowedtablename}_value");
+			ee()->db->where("{$allowedtablename}_type", 'url');
+			ee()->db->where("{$allowedtablename}_value !=", '');
+			$query = ee()->db->get($allowedtablename);
 
 			if ($query->num_rows() > 0)
 			{
-				$ignore = array_merge($ignore, explode('|', $query->row('allowedlist_value')));
+				$ignore = array_merge($ignore, explode('|', $query->row("{$allowedtablename}_value")));
 			}
 		}
 
@@ -101,7 +112,7 @@ class No_follow {
 		//  Cache Ignored URLs
 		// -------------------------------
 
-		ee()->blockedlist->allowed = $ignore;
+		$allowed = $ignore;
 
 		// -------------------------------
 		//  Search and Modify URLs
